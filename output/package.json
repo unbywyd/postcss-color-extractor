@@ -1,0 +1,43 @@
+{
+    "name": "postcss-color-extractor",
+    "version": "1.0.0",
+    "description": "",
+    "main": "output/src/index.js",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/unbywyd/postcss-color-extractor.git"
+    },
+    "keywords": [
+        "sass",
+        "module",
+        "colors",
+        "theme",
+        "themization",
+        "inversion"
+    ],
+    "author": "unbywyd",
+    "license": "ISC",
+    "bugs": {
+        "url": "https://github.com/unbywyd/postcss-color-extractorissues"
+    },
+    "homepage": "https://github.com/unbywyd/postcss-color-extractor#readme",
+    "dependencies": {
+        "@babel/preset-env": "^7.20.2",
+        "babel-loader": "^9.1.2",
+        "css-loader": "^6.7.3",
+        "postcss-selector-parser": "^6.0.11",
+        "ungic-sass-utils": "^1.0.1"
+    },
+    "devDependencies": {
+        "@types/sass-loader": "^8.0.3",
+        "chokidar": "^3.5.3",
+        "mini-css-extract-plugin": "^2.7.2",
+        "sass": "^1.57.1",
+        "sass-loader": "^13.2.0",
+        "ts-loader": "^9.4.2",
+        "typescript": "^4.9.4",
+        "webpack": "^5.75.0",
+        "webpack-cli": "^5.0.1",
+        "webpack-dev-server": "^4.11.1"
+    }
+}
