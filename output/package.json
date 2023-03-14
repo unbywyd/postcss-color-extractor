@@ -1,7 +1,7 @@
 {
     "name": "postcss-color-extractor",
-    "version": "1.0.0",
-    "description": "",
+    "version": "1.0.1",
+    "description": "This plugin separates declarations into those that contain colors and those that do not. ",
     "main": "output/src/index.js",
     "repository": {
         "type": "git",
@@ -13,7 +13,9 @@
         "colors",
         "theme",
         "themization",
-        "inversion"
+        "inversion",
+        "extractor",
+        "extract"
     ],
     "author": "unbywyd",
     "license": "ISC",
@@ -21,14 +23,13 @@
         "url": "https://github.com/unbywyd/postcss-color-extractorissues"
     },
     "homepage": "https://github.com/unbywyd/postcss-color-extractor#readme",
-    "dependencies": {
+    "dependencies": {},
+    "devDependencies": {
         "@babel/preset-env": "^7.20.2",
         "babel-loader": "^9.1.2",
         "css-loader": "^6.7.3",
         "postcss-selector-parser": "^6.0.11",
-        "ungic-sass-utils": "^1.0.1"
-    },
-    "devDependencies": {
+        "ungic-sass-utils": "^1.0.1",
         "@types/sass-loader": "^8.0.3",
         "chokidar": "^3.5.3",
         "mini-css-extract-plugin": "^2.7.2",
