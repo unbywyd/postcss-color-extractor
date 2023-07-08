@@ -1,6 +1,6 @@
 {
     "name": "postcss-color-extractor",
-    "version": "1.0.2",
+    "version": "1.0.6",
     "description": "This plugin separates declarations into those that contain colors and those that do not. ",
     "main": "output/src/index.js",
     "repository": {
