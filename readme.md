@@ -44,5 +44,6 @@ This plugin has several options that can be passed in as an object:
 * `includeResultInOutput`: a **boolean** that determines whether the extracted parts should be included in the final CSS output or not.
 * `mergeMode`: a **string** that sets the merge mode of the selectors, can be "merge" or "before"
 * `mergeType`: a **string** that sets the merge type, can be "className", "attribute", "id", "tag"
-* `mergeValue`: a **string** that sets the merge value, it will be added to **mergeType**
+* `mergeValue`: a **string** | **null** that sets the merge value, it will be added to **mergeType**, **null** - disable merging
 * `removeFromSelector`: an **array** of objects containing a type and a **match** property, the plugin will remove the parts of selectors that match the type and match properties.
+* `saveInputRules`: a **boolean** that determines whether the input rules should be saved in the output or not.

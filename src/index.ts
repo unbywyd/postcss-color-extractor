@@ -30,6 +30,7 @@ const plugin: PluginCreator<plugin.options> = (opts) => {
     ],
     includeResultInOutput: false,
     mergeMode: MergeMode.Before,
+    saveInputRules: false,
     mergeType: SelectorType.ClassName,
     mergeValue: "theme",
     ...(opts || {}),
@@ -37,13 +38,19 @@ const plugin: PluginCreator<plugin.options> = (opts) => {
 
   // check options
 
-  if (!Object.values(SelectorType).includes(options.mergeType)) {
+  if (
+    options.mergeValue &&
+    !Object.values(SelectorType).includes(options.mergeType)
+  ) {
     throw new Error(
       `mergeType must be one of ${Object.values(SelectorType).join(",")}`
     );
   }
 
-  if (!Object.values(MergeMode).includes(options.mergeMode)) {
+  if (
+    options.mergeValue &&
+    !Object.values(MergeMode).includes(options.mergeMode)
+  ) {
     throw new Error(
       `mergeMode must be one of ${Object.values(MergeMode).join(",")}`
     );
@@ -52,21 +59,27 @@ const plugin: PluginCreator<plugin.options> = (opts) => {
   return {
     postcssPlugin: name,
     Once(root) {
+      if (options.beforeCallback) {
+        options.beforeCallback(root);
+      }
       try {
+        // clone root
         const rootClone = root.clone();
 
         /*
-         *    Remove all color declarations
+         *    Remove all color declarations if saveInputRules is false.
          */
-        root.walkDecls((node) => {
-          try {
-            if (colorDetecor(node.value)) {
-              node.remove();
+        if (!options.saveInputRules) {
+          root.walkDecls((node) => {
+            try {
+              if (colorDetecor(node.value)) {
+                node.remove();
+              }
+            } catch (e) {
+              console.error(e);
             }
-          } catch (e) {
-            console.error(e);
-          }
-        });
+          });
+        }
 
         /*
          *  Remove all declarations that do not contain color.
@@ -84,19 +97,31 @@ const plugin: PluginCreator<plugin.options> = (opts) => {
         const transformNode = parser[options.mergeType]({
           value: options.mergeValue,
         });
+
+        if (!transformNode) {
+          console.error(
+            `${options.mergeType}:${options.mergeValue} selector invalid!`
+          );
+        }
+
         const transform = (selectors: parser.Root) => {
           selectors.each((selector: parser.Selector) => {
-            if (options.mergeMode == MergeMode.Before) {
-              let combo: parser.Combinator = parser.combinator({ value: " " });
-              selector.prepend(combo as any);
-              selector.insertBefore(combo, transformNode);
+            if (options.mergeValue) {
+              if (options.mergeMode == MergeMode.Before) {
+                let combo: parser.Combinator = parser.combinator({
+                  value: " ",
+                });
+                selector.prepend(combo as any);
+                selector.insertBefore(combo, transformNode);
+              }
+              if (options.mergeMode == MergeMode.Merge) {
+                selector.prepend(transformNode);
+              }
             }
-            if (options.mergeMode == MergeMode.Merge) {
-              selector.prepend(transformNode);
-            }
+
             if (options?.removeFromSelector?.length) {
               for (let el of options.removeFromSelector) {
-                selector.each((node) => {
+                selector.each((node: any) => {
                   let seearchKey: any = "value";
                   if (node.type == "attribute") {
                     seearchKey = "attribute";
@@ -104,16 +129,21 @@ const plugin: PluginCreator<plugin.options> = (opts) => {
                   if (el.key && el.key in node) {
                     seearchKey = el.key;
                   }
-                  let value: any = node[seearchKey] || "";
+                  try {
+                    if (seearchKey in node) {
+                      let value: any = node[seearchKey] || "";
 
-                  if (node.type == el.type && el.match.test(value)) {
-                    node.remove();
-                  }
+                      if (node.type == el.type && el.match.test(value)) {
+                        node.remove();
+                      }
+                    }
+                  } catch (e) {}
                 });
               }
             }
           });
         };
+
         rootClone.walkRules((node) => {
           if (node.parent?.type == "atrule") {
             if (
@@ -128,29 +158,24 @@ const plugin: PluginCreator<plugin.options> = (opts) => {
           if (node && !node?.nodes?.length) {
             node.remove();
           } else if (node) {
-            if (transformNode) {
-              parser(transform).processSync(node, {
-                updateSelector: true,
-              });
-            } else {
-              console.error(
-                `${options.mergeType}:${options.mergeValue} selector invalid!`
-              );
+            parser(transform).processSync(node, {
+              updateSelector: true,
+            });
+          }
+        });
+
+        if (!options.saveInputRules) {
+          root.walkRules((node) => {
+            if (node && !node?.nodes?.length) {
+              node.remove();
             }
-          }
-        });
-
-        root.walkRules((node) => {
-          if (node && !node?.nodes?.length) {
-            node.remove();
-          }
-        });
-
-        root.walkAtRules((node) => {
-          if (node && !node?.nodes?.length) {
-            node.remove();
-          }
-        });
+          });
+          root.walkAtRules((node) => {
+            if (node && !node?.nodes?.length) {
+              node.remove();
+            }
+          });
+        }
 
         rootClone.walkAtRules((node) => {
           if (node && !node?.nodes?.length) {

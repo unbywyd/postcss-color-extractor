@@ -21,35 +21,44 @@ const plugin = (opts) => {
         ],
         includeResultInOutput: false,
         mergeMode: types_1.MergeMode.Before,
+        saveInputRules: false,
         mergeType: types_1.SelectorType.ClassName,
         mergeValue: "theme",
         ...(opts || {}),
     };
     // check options
-    if (!Object.values(types_1.SelectorType).includes(options.mergeType)) {
+    if (options.mergeValue &&
+        !Object.values(types_1.SelectorType).includes(options.mergeType)) {
         throw new Error(`mergeType must be one of ${Object.values(types_1.SelectorType).join(",")}`);
     }
-    if (!Object.values(types_1.MergeMode).includes(options.mergeMode)) {
+    if (options.mergeValue &&
+        !Object.values(types_1.MergeMode).includes(options.mergeMode)) {
         throw new Error(`mergeMode must be one of ${Object.values(types_1.MergeMode).join(",")}`);
     }
     return {
         postcssPlugin: package_json_1.name,
         Once(root) {
+            if (options.beforeCallback) {
+                options.beforeCallback(root);
+            }
             try {
+                // clone root
                 const rootClone = root.clone();
                 /*
-                 *    Remove all color declarations
+                 *    Remove all color declarations if saveInputRules is false.
                  */
-                root.walkDecls((node) => {
-                    try {
-                        if ((0, utils_1.colorDetecor)(node.value)) {
-                            node.remove();
+                if (!options.saveInputRules) {
+                    root.walkDecls((node) => {
+                        try {
+                            if ((0, utils_1.colorDetecor)(node.value)) {
+                                node.remove();
+                            }
                         }
-                    }
-                    catch (e) {
-                        console.error(e);
-                    }
-                });
+                        catch (e) {
+                            console.error(e);
+                        }
+                    });
+                }
                 /*
                  *  Remove all declarations that do not contain color.
                  */
@@ -66,15 +75,22 @@ const plugin = (opts) => {
                 const transformNode = parser[options.mergeType]({
                     value: options.mergeValue,
                 });
+                if (!transformNode) {
+                    console.error(`${options.mergeType}:${options.mergeValue} selector invalid!`);
+                }
                 const transform = (selectors) => {
                     selectors.each((selector) => {
-                        if (options.mergeMode == types_1.MergeMode.Before) {
-                            let combo = parser.combinator({ value: " " });
-                            selector.prepend(combo);
-                            selector.insertBefore(combo, transformNode);
-                        }
-                        if (options.mergeMode == types_1.MergeMode.Merge) {
-                            selector.prepend(transformNode);
+                        if (options.mergeValue) {
+                            if (options.mergeMode == types_1.MergeMode.Before) {
+                                let combo = parser.combinator({
+                                    value: " ",
+                                });
+                                selector.prepend(combo);
+                                selector.insertBefore(combo, transformNode);
+                            }
+                            if (options.mergeMode == types_1.MergeMode.Merge) {
+                                selector.prepend(transformNode);
+                            }
                         }
                         if (options?.removeFromSelector?.length) {
                             for (let el of options.removeFromSelector) {
@@ -86,10 +102,15 @@ const plugin = (opts) => {
                                     if (el.key && el.key in node) {
                                         seearchKey = el.key;
                                     }
-                                    let value = node[seearchKey] || "";
-                                    if (node.type == el.type && el.match.test(value)) {
-                                        node.remove();
+                                    try {
+                                        if (seearchKey in node) {
+                                            let value = node[seearchKey] || "";
+                                            if (node.type == el.type && el.match.test(value)) {
+                                                node.remove();
+                                            }
+                                        }
                                     }
+                                    catch (e) { }
                                 });
                             }
                         }
@@ -108,26 +129,23 @@ const plugin = (opts) => {
                         node.remove();
                     }
                     else if (node) {
-                        if (transformNode) {
-                            parser(transform).processSync(node, {
-                                updateSelector: true,
-                            });
+                        parser(transform).processSync(node, {
+                            updateSelector: true,
+                        });
+                    }
+                });
+                if (!options.saveInputRules) {
+                    root.walkRules((node) => {
+                        if (node && !node?.nodes?.length) {
+                            node.remove();
                         }
-                        else {
-                            console.error(`${options.mergeType}:${options.mergeValue} selector invalid!`);
+                    });
+                    root.walkAtRules((node) => {
+                        if (node && !node?.nodes?.length) {
+                            node.remove();
                         }
-                    }
-                });
-                root.walkRules((node) => {
-                    if (node && !node?.nodes?.length) {
-                        node.remove();
-                    }
-                });
-                root.walkAtRules((node) => {
-                    if (node && !node?.nodes?.length) {
-                        node.remove();
-                    }
-                });
+                    });
+                }
                 rootClone.walkAtRules((node) => {
                     if (node && !node?.nodes?.length) {
                         node.remove();

@@ -26,9 +26,11 @@ export type SelectorNode = {
 };
 export interface PluginOptions {
   extract?: ExtractCallback;
+  beforeCallback?: (root: Root) => void;
   includeResultInOutput?: boolean;
   mergeMode: MergeMode;
   mergeType: SelectorType;
-  mergeValue: string;
+  mergeValue: string|null;
+  saveInputRules?: boolean;
   removeFromSelector: Array<SelectorNode>;
 }
