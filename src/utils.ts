@@ -147,9 +147,12 @@ const colors = [
   "whitesmoke",
   "yellow",
   "yellowgreen",
+  "transparent",
 ];
 
 export const colorDetecor = (value: string) =>
-  /(#(?:[0-9a-fA-F]{3}){1,2})|(rgba?\()|(hsla?\()/.test(value) ||
+  /(#(?:[0-9a-fA-F]{3}){1,2})|(lab\()|(hwb\()|(rgba?\()|(hsla?\()/.test(
+    value
+  ) ||
   ("string" == typeof value &&
-    colors.find((e) => e === value.trim().toLowerCase()));
+    colors.find((e) => value.trim().toLowerCase().includes(e)));
